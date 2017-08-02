@@ -28,6 +28,7 @@
 #import "ReaderDocument.h"
 
 @class ReaderViewController;
+@protocol ANReadingProgressTracker;
 
 @protocol ReaderViewControllerDelegate <NSObject>
 
@@ -39,8 +40,11 @@
 
 @interface ReaderViewController : UIViewController
 
+// Support for reading progress tracking
+@property (nonatomic, strong, readonly) id<ANReadingProgressTracker> progressTracker;
 @property (nonatomic, weak, readwrite) id <ReaderViewControllerDelegate> delegate;
 
 - (instancetype)initWithReaderDocument:(ReaderDocument *)object;
+- (instancetype)initWithReaderDocument:(ReaderDocument *)object progressTracker:(id<ANReadingProgressTracker>)tracker;
 
 @end

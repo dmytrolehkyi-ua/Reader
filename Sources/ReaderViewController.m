@@ -31,11 +31,14 @@
 #import "ReaderContentView.h"
 #import "ReaderThumbCache.h"
 #import "ReaderThumbQueue.h"
+#import "ANReadingProgressTracker.h"
 
 #import <MessageUI/MessageUI.h>
 
 @interface ReaderViewController () <UIScrollViewDelegate, UIGestureRecognizerDelegate, MFMailComposeViewControllerDelegate, UIDocumentInteractionControllerDelegate,
 									ReaderMainToolbarDelegate, ReaderMainPagebarDelegate, ReaderContentViewDelegate, ThumbsViewControllerDelegate>
+
+@property (nonatomic, strong, readwrite) id<ANReadingProgressTracker> progressTracker;
 @end
 
 @implementation ReaderViewController
@@ -224,12 +227,17 @@
 		[mainToolbar setBookmarkState:[document.bookmarks containsIndex:page]];
 
 		[mainPagebar updatePagebar]; // Update page bar
+        
+        // Track reading progress
+        [self.progressTracker didReadPageAtIndex:page
+                                      totalPages:document.pageCount.integerValue
+                                          format:ANTrackedBookFormatPDF];
 	}
 }
 
 - (void)showDocumentPage:(NSInteger)page
 {
-	if (page != currentPage) // Only if on different page
+    if (page != currentPage) // Only if on different page
 	{
 		if ((page < minimumPage) || (page > maximumPage)) return;
 
@@ -252,6 +260,11 @@
 		[mainToolbar setBookmarkState:[document.bookmarks containsIndex:page]];
 
 		[mainPagebar updatePagebar]; // Update page bar
+        
+        // Track reading progress
+        [self.progressTracker didReadPageAtIndex:page
+                                      totalPages:document.pageCount.integerValue
+                                          format:ANTrackedBookFormatPDF];
 	}
 }
 
@@ -288,6 +301,11 @@
 
 - (instancetype)initWithReaderDocument:(ReaderDocument *)object
 {
+    return [self initWithReaderDocument:object progressTracker:nil];
+}
+
+- (instancetype)initWithReaderDocument:(ReaderDocument *)object progressTracker:(id<ANReadingProgressTracker>)tracker
+{
 	if ((self = [super initWithNibName:nil bundle:nil])) // Initialize superclass
 	{
 		if ((object != nil) && ([object isKindOfClass:[ReaderDocument class]])) // Valid object
@@ -305,6 +323,7 @@
 			[object updateDocumentProperties]; document = object; // Retain the supplied ReaderDocument object for our use
 
 			[ReaderThumbCache touchThumbCacheWithGUID:object.guid]; // Touch the document thumb cache directory
+            _progressTracker = tracker;
 		}
 		else // Invalid ReaderDocument object
 		{
