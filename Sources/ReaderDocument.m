@@ -259,7 +259,7 @@
 
 - (BOOL)canEmail
 {
-	return YES;
+	return NO;
 }
 
 - (BOOL)canExport
